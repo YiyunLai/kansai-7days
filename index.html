@@ -1,0 +1,781 @@
+<title>關西七日帖</title>
+<script src="config.js"></script>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a stamp-rally notebook. Route-map of Kansai (Kyoto → Osaka → Kobe) on the left, the day's timetable on the right;
+   stops collect vermilion 朱印 stamps. Indigo-dyed (藍) ink on pale stone paper; night indigo in dark mode. */
+:root{
+  --paper:#eef0ec; --card:#fafaf7; --ink:#1c2230; --ink-2:#5d6473; --rule:#cfd3cc;
+  --ai:#24426f; --shu:#c8402a; --land:#e3e6df; --mount:#d5dbd0; --sea:#d9e2ea; --water:#9db6cf;
+  --f-serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-mono:"DM Mono",ui-monospace,"SFMono-Regular",monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#12161f; --card:#1a1f2b; --ink:#e8e6df; --ink-2:#9aa1b0; --rule:#2c3341;
+  --ai:#93acd9; --shu:#ec6a50; --land:#1a202c; --mount:#1f2a2a; --sea:#151d2c; --water:#3c5a80; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#12161f; --card:#1a1f2b; --ink:#e8e6df; --ink-2:#9aa1b0; --rule:#2c3341;
+  --ai:#93acd9; --shu:#ec6a50; --land:#1a202c; --mount:#1f2a2a; --sea:#151d2c; --water:#3c5a80; color-scheme:dark}
+[hidden]{display:none!important}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-sans);font-size:15px;line-height:1.7;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--paper)}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--shu);outline-offset:3px}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .in{max-width:1080px;margin:0 auto;display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding-block:12px}
+.brand{font-family:var(--f-serif);font-weight:900;font-size:20px;letter-spacing:.12em;margin-right:auto;display:flex;align-items:center;gap:10px}
+.brand i{width:12px;height:12px;border-radius:50%;background:var(--shu);display:inline-block}
+.count{font-family:var(--f-mono);font-size:13px;color:var(--ink-2);display:flex;gap:16px}
+.count b{color:var(--ink);font-weight:500;font-size:15px}
+.nav{display:flex;gap:4px;flex-wrap:wrap}
+.nav button{background:none;border:1px solid transparent;padding:4px 10px;font-size:14px;border-radius:2px}
+.nav button:hover{border-color:var(--rule)}
+.nav button[aria-pressed="true"]{color:var(--shu)}
+
+/* ---------- main layout ---------- */
+.main{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:40px;padding-top:28px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr);gap:28px}}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-2);margin:0 0 6px}
+.gwrap{position:relative;border:1px solid var(--ink);background:var(--land)}
+.gmap{width:100%;height:min(72vh,680px);min-height:420px}
+.gmap iframe{border:0;width:100%;height:100%;display:block}
+.gnote{position:absolute;left:10px;bottom:10px;right:10px;background:var(--card);border:1px solid var(--rule);padding:8px 12px;font-size:13px;color:var(--ink-2)}
+.pin{position:relative;display:grid;justify-items:center;gap:3px;background:none;border:0;padding:0;cursor:pointer;transform:translateY(6px)}
+.pin .ph{width:46px;height:46px;border-radius:50%;border:3px solid #1c2230;background:#e3e6df center/cover no-repeat;box-shadow:0 2px 6px rgb(0 0 0 / .35);
+  display:grid;place-items:center;font-family:var(--f-serif);font-weight:900;font-size:15px;color:#1c2230;filter:grayscale(1) contrast(.9);transition:transform .15s}
+.pin:hover .ph{transform:scale(1.12)}
+.pin.found .ph{border-color:#c8402a;filter:none}
+.pin.unknown .ph{border:3px dashed #c8402a;filter:none;background-color:#fafaf7}
+.pin .lb{font-size:12px;font-weight:700;color:#1c2230;background:#fafaf7;border:1px solid #1c2230;padding:0 6px;line-height:1.5;white-space:nowrap}
+.pin:not(.found):not(.unknown) .lb{display:none}
+.pin .ck{position:absolute;top:-4px;right:-6px;width:18px;height:18px;border-radius:50%;background:#c8402a;color:#fff;font-size:11px;display:none;place-items:center;border:2px solid #fafaf7}
+.pin.found .ck{display:grid}
+.strip{display:flex;gap:12px;overflow-x:auto;padding:14px 2px 6px;scrollbar-width:thin}
+.strip .pin{transform:none;flex:none;width:76px}
+.strip .pin .ph{width:58px;height:58px}
+.strip .pin .lb{display:block;border:0;background:none;font-weight:500;color:var(--ink);white-space:normal;text-align:center;font-size:12px;line-height:1.3}
+.strip .pin:not(.found) .lb{color:var(--ink-2)}
+.hint{font-size:13px;color:var(--ink-2);margin:12px 0 0;display:flex;gap:6px 18px;flex-wrap:wrap}
+.hint span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;border:1.2px solid var(--ink);background:var(--card)}
+
+/* ---------- timetable ---------- */
+.side h2{font-family:var(--f-serif);font-weight:900;font-size:clamp(26px,4vw,34px);line-height:1.25;margin:0;letter-spacing:.06em;text-wrap:balance}
+.side .sum{font-family:var(--f-mono);font-size:13px;color:var(--ink-2);margin:6px 0 18px;display:flex;gap:4px 16px;flex-wrap:wrap}
+.days{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--ink);margin-bottom:22px}
+.days button{background:none;border:0;border-left:1px solid var(--ink);padding:8px 0 6px;display:grid;justify-items:center;line-height:1.2;position:relative;min-width:0}
+.days button:first-child{border-left:0}
+.days button b{font-family:var(--f-serif);font-size:18px;font-weight:700}
+.days button span{font-family:var(--f-mono);font-size:10px;color:var(--ink-2)}
+.days button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.days button[aria-selected="true"] span{color:var(--paper);opacity:.75}
+.days button.done::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--shu)}
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--rule);padding-bottom:8px;margin-bottom:6px}
+.dayhead h3{font-family:var(--f-serif);font-size:20px;margin:0;font-weight:700}
+.dayhead span{font-family:var(--f-mono);font-size:12px;color:var(--ink-2)}
+.tt{list-style:none;margin:0;padding:0}
+.tt li{display:grid;grid-template-columns:48px 22px minmax(0,1fr);gap:0 10px;align-items:start}
+.tt .t{font-family:var(--f-mono);font-size:13px;padding-top:9px;text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tt .rail{position:relative;align-self:stretch}
+.tt .rail::before{content:"";position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--ink)}
+.tt li:first-child .rail::before{top:16px}
+.tt li:last-child .rail::before{bottom:calc(100% - 18px)}
+.tt .stopr .rail::after{content:"";position:absolute;left:4px;top:13px;width:10px;height:10px;border-radius:50%;background:var(--card);border:2px solid var(--ink)}
+.tt .stopr.found .rail::after{background:var(--shu);border-color:var(--shu)}
+.tt .stopr button{background:none;border:0;padding:6px 0 8px;text-align:left;width:100%;min-width:0;display:block}
+.tt .stopr button:hover .nm{color:var(--shu)}
+.tt .nm{font-weight:700;font-size:15px;display:block;line-height:1.45}
+.tt .st{font-size:12px;color:var(--ink-2)}
+.tt .note{display:block;font-family:var(--f-mono);font-size:12px;color:var(--ai)}
+.tt .mv{font-size:12px;color:var(--ink-2)}
+.tt .mv .t{padding-top:1px;font-size:11px}
+.tt .mv > span:last-child{padding:1px 0 3px}
+.empty{border:1px dashed var(--ink-2);padding:18px;color:var(--ink-2);font-size:14px}
+
+/* ---------- modal ---------- */
+.veil{position:fixed;inset:0;z-index:50;background:rgb(16 20 30 / .45);display:flex;align-items:center;justify-content:center;
+  padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.sheet{width:100%;max-width:560px;max-height:100%;overflow:auto;background:var(--card);border:1px solid var(--ink);padding:24px;position:relative}
+.sheet.wide{max-width:720px}
+.x{position:absolute;top:10px;right:10px;width:34px;height:34px;border:0;background:var(--card);border-radius:50%;z-index:2;font-size:22px;line-height:1;color:var(--ink-2)}
+.x:hover{color:var(--ink)}
+.hero{margin:-24px -24px 18px;position:relative}
+.hero img{display:block;width:100%;height:220px;object-fit:cover}
+.hero figcaption{position:absolute;right:8px;bottom:6px;font-size:11px;background:rgb(0 0 0 / .55);color:#fff;padding:1px 6px}
+.hero figcaption a{color:#fff}
+.sheet a{color:var(--ai)}
+.spothead{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:16px;align-items:start;padding-right:20px}
+.sheet h2{font-family:var(--f-serif);font-weight:900;font-size:clamp(22px,5vw,28px);line-height:1.3;margin:4px 0;text-wrap:balance}
+.meta{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);margin:0;letter-spacing:.04em}
+.meta .n{color:var(--shu)}
+.addr{font-size:13px;color:var(--ink-2);margin:4px 0 0}
+.flight{font-family:var(--f-mono);font-size:13px;color:var(--ai);margin:8px 0 0}
+.mame{margin:18px 0 0;padding:14px 16px;background:var(--paper)}
+.mame b{display:block;font-family:var(--f-serif);font-size:13px;letter-spacing:.2em;color:var(--shu);margin-bottom:2px}
+.mame p{margin:0}
+.visits{font-size:13px;color:var(--ink-2);margin:12px 0 0}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px;align-items:center}
+.btn{border:1px solid var(--ink);background:none;padding:7px 16px;font-size:14px;line-height:1.3;border-radius:2px}
+.btn:hover{background:var(--ink);color:var(--card)}
+.btn.shu{background:var(--shu);border-color:var(--shu);color:#fff}
+.btn.shu:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.3;pointer-events:none}
+.sp{flex:1}
+
+/* stamp */
+.stamp{width:96px;height:96px;color:var(--shu);transform:rotate(-6deg)}
+.stamp.new{animation:press .5s cubic-bezier(.2,1.6,.4,1) both}
+.stamp.off{color:var(--rule)}
+@keyframes press{0%{transform:scale(1.6) rotate(-16deg);opacity:0}100%{transform:scale(1) rotate(-6deg);opacity:1}}
+
+/* stamp book */
+.book{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:14px 10px;margin-top:16px}
+.book button{background:none;border:0;padding:0;display:grid;justify-items:center;gap:2px;min-width:0}
+.book .stamp{width:76px;height:76px}
+.book small{font-size:12px;color:var(--ink-2);text-align:center;line-height:1.3}
+.bar{height:4px;background:var(--rule);margin-top:10px}
+.bar span{display:block;height:100%;background:var(--shu)}
+
+/* games */
+.glist{display:grid;margin-top:12px;border-top:1px solid var(--rule)}
+.glist .g{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--rule)}
+.glist .k{font-family:var(--f-serif);font-weight:900;font-size:28px;color:var(--shu);text-align:center}
+.glist h4{margin:0;font-family:var(--f-serif);font-size:17px}
+.glist p{margin:0;font-size:13px;color:var(--ink-2)}
+.glist .hs{font-family:var(--f-mono);font-size:12px;color:var(--ai)}
+.ghud{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:13px;margin-top:12px}
+.gcv{display:block;width:100%;max-width:340px;aspect-ratio:3/4;margin:8px auto 0;border:1px solid var(--ink);touch-action:none}
+.mem{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:340px;margin:10px auto 0}
+.mem button{aspect-ratio:1;border:1px solid var(--ink);background:var(--card);display:grid;place-content:center;gap:4px;padding:4px;min-width:0;border-radius:2px}
+.mem button b{font-family:var(--f-serif);font-weight:900;font-size:clamp(26px,8vw,36px);line-height:1}
+.mem button span{font-size:12px;color:var(--ink-2)}
+.mem button.ok{background:var(--ai);border-color:var(--ai);color:var(--card)}
+.mem button.ok span{color:var(--card)}
+.mem button.bad{background:var(--shu);border-color:var(--shu);color:#fff}
+.mem button.bad span{color:#fff}
+.order{max-width:340px;margin:10px auto 0;padding:10px 12px;background:var(--paper);font-size:14px;min-height:48px;text-align:center}
+.order b{font-family:var(--f-serif)}
+.res{margin-top:12px}
+
+/* ---------- cover ---------- */
+.cover{position:fixed;inset:0;z-index:70;background:var(--paper);display:grid;place-items:center;overflow:hidden;
+  padding:max(20px,env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) max(20px,env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px))}
+.cover .wave{position:absolute;left:0;right:0;bottom:0;height:30%;width:100%}
+.cover .in{position:relative;display:flex;gap:clamp(24px,6vw,64px);align-items:stretch;flex-direction:row-reverse}
+.cover h1{display:flex;flex-direction:column;gap:.12em;flex:none;align-self:center;font-family:var(--f-serif);font-weight:900;font-size:clamp(44px,11vw,104px);margin:0;line-height:1;color:var(--ink)}
+.cover h1 em{font-style:normal;color:var(--shu)}
+.cover .info{display:flex;flex-direction:column;justify-content:flex-end;gap:14px;max-width:15em}
+.cover .info p{margin:0;font-size:14px;color:var(--ink-2)}
+.cover .info .d{font-family:var(--f-mono);font-size:13px;letter-spacing:.12em;color:var(--ink)}
+.cover .info .c{font-family:var(--f-serif);font-size:20px;color:var(--ink);letter-spacing:.3em}
+.cover .seal{width:60px;height:60px;color:var(--shu);transform:rotate(-8deg)}
+
+/* ---------- toast & ending ---------- */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;background:var(--ink);color:var(--paper);
+  padding:10px 18px;font-size:14px;max-width:calc(100% - 32px);text-align:center;border-radius:2px}
+.ending{position:fixed;inset:0;z-index:75;background:#14182a;color:#ebe8df;overflow:hidden}
+.ending .roll{position:absolute;top:14%;right:0;display:flex;flex-direction:row-reverse;align-items:flex-start;gap:1.1em;font-family:var(--f-serif);font-size:clamp(16px,2.4vw,20px);will-change:transform}
+.ending .col{display:flex;flex-direction:column;align-items:center;line-height:1.25;flex:none}
+.ending .col.h{font-size:1.45em;font-weight:900;color:#f07a5f;margin-left:.4em}
+.ending .col.d{color:#8f97ab;font-family:var(--f-mono);font-size:13px}
+.ending .gap{width:2.4em;flex:none}
+.ending .ctl{position:absolute;right:max(14px,env(safe-area-inset-right,0px));top:max(14px,env(safe-area-inset-top,0px));display:flex;gap:6px;z-index:2}
+.ending .ctl button{background:#14182a;border:1px solid #4a5168;color:#ebe8df;padding:4px 12px;font-size:13px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){.stamp.new{animation:none}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="sgh" width="16" height="8" patternUnits="userSpaceOnUse">
+      <g fill="var(--sea)" stroke="var(--water)" stroke-width=".55">
+        <circle cx="0" cy="4" r="7.5"/><circle cx="0" cy="4" r="5"/><circle cx="0" cy="4" r="2.5"/>
+        <circle cx="16" cy="4" r="7.5"/><circle cx="16" cy="4" r="5"/><circle cx="16" cy="4" r="2.5"/>
+        <circle cx="8" cy="8" r="7.5"/><circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="2.5"/>
+      </g>
+    </pattern>
+  </defs>
+</svg>
+
+<div class="cover" id="cover">
+  <svg class="wave" preserveAspectRatio="none" aria-hidden="true"><rect width="100%" height="100%" fill="url(#sgh)"/></svg>
+  <div class="in">
+    <h1 aria-label="關西七日帖"><span>關</span><span>西</span><em>七</em><span>日</span><span>帖</span></h1>
+    <div class="info">
+      <svg class="seal" viewBox="0 0 64 64" aria-hidden="true"><rect x="3" y="3" width="58" height="58" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><text x="32" y="29" text-anchor="middle" font-family="Noto Serif TC,serif" font-weight="900" font-size="18" fill="currentColor">集</text><text x="32" y="51" text-anchor="middle" font-family="Noto Serif TC,serif" font-weight="900" font-size="18" fill="currentColor">印</text></svg>
+      <p class="c">神戶・京都・大阪</p>
+      <p class="d">2027.2.20 — 2.26</p>
+      <p>沿著行程走一遍，每到一站蓋一枚朱印。集滿 22 枚，翻到最後一頁。</p>
+      <div><button class="btn shu" id="startBtn">開始集印</button></div>
+    </div>
+  </div>
+</div>
+
+<header class="top"><div class="in">
+  <div class="brand"><i></i>關西七日帖</div>
+  <div class="count"><span>朱印 <b id="cFound">0</b>/<span id="cTotal">22</span></span><span>日 <b id="cDays">0</b>/7</span></div>
+  <nav class="nav">
+    <button id="bBook">印章帳</button><button id="bGames">小遊戲</button><button id="bEnd">終章</button><button id="bSound" aria-pressed="false">音</button>
+  </nav>
+</div></header>
+
+<main class="main">
+  <section>
+    <p class="eyebrow">Google Maps · 地圖</p>
+    <div class="gwrap"><div class="gmap" id="gmap"></div></div>
+    <div class="strip" id="strip" aria-label="這一天的景點"></div>
+    <div class="hint">
+      <span><i class="dot" style="background:#9aa"></i>未到訪（黑白）</span>
+      <span><i class="dot" style="background:var(--shu);border-color:var(--shu)"></i>已蓋印</span>
+      <span><i class="dot" style="border-style:dashed;border-color:var(--shu)"></i>待安排</span>
+      <span>照片：維基百科／Wikimedia Commons</span>
+    </div>
+  </section>
+  <aside class="side">
+    <p class="eyebrow">Timetable · 行程表</p>
+    <h2>神戶・京都・大阪<br>七日之旅</h2>
+    <p class="sum"><span>31 停留點</span><span>3,602.4 km</span><span>STARLUX JX1834 / JX1835</span></p>
+    <div class="days" role="tablist" id="days"></div>
+    <div id="dayview"></div>
+  </aside>
+</main>
+
+<div class="veil" id="veil" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+<div class="ending" id="ending" hidden>
+  <div class="ctl"><button id="enPause">暫停</button><button id="enReplay">重播</button><button id="enClose">關閉</button></div>
+  <div class="roll" id="roll"></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ================= DATA (transcribed from the Funliday screenshots) ================= */
+const SPOTS = {
+  tpe:   { name: "臺灣桃園國際機場", short: "桃園機場", seal: "桃園", addr: "TPE",
+           tip: "去程星宇 JX1834（08:05→11:45，2 小時 40 分），回程 JX1835（12:45→14:45，3 小時）。回程多 20 分鐘，因為往西飛要逆著冬季的西風噴流。" },
+  ukb:   { name: "神戶機場", short: "神戶機場", seal: "空港", addr: "1 Kobekuko, Chuo Ward, Kobe, Hyogo 650-0048", x: 205, y: 486,
+           tip: "2006 年開港，蓋在港島南邊的人工島上。往市區搭無人駕駛的 Port Liner（ポートライナー），終點就是三宮。" },
+  station:{ name: "Train Station", short: "車站", seal: "驛", addr: "兵庫縣 神戶市 中央區", x: 190, y: 384,
+           tip: "Funliday 上這站沒寫站名，只標在中央區。從神戶機場來回，最可能是 Port Liner 的車站。Port Liner 1981 年通車，是日本最早一批無人駕駛的新交通系統（AGT）。" },
+  nankin:{ name: "南京町 中華街", short: "南京町", seal: "南京町", addr: "1 Chome-3-18 Sakaemachidori, Chuo Ward, Kobe, Hyogo 650-0023", x: 86, y: 412,
+           tip: "日本三大中華街之一，另外兩個在橫濱和長崎。1868 年神戶開港後，華人在居留地西側聚居而形成。" },
+  daimaru:{ name: "大丸神戶店", short: "大丸", seal: "大丸", addr: "40 Akashimachi, Chuo Ward, Kobe, Hyogo 650-0037", x: 128, y: 405,
+           tip: "位在「舊居留地」，開港時期劃給外國人住的區域。附近還留著不少明治到昭和初期的西洋建築，晚上點燈很好拍。" },
+  hotel: { name: "Apartment Hotel 11 Kōbe Motomachi", short: "飯店", seal: "元町", addr: "神戶 元町一帶（自訂）", x: 52, y: 390,
+           tip: "神戶這幾晚的基地。第 1 天 20:00 入住，第 3 天早上 09:00 出發去新神戶站搭新幹線。" },
+  azur:  { name: "Azur Maiko", short: "舞子海灘", seal: "舞子濱", addr: "11 Kaigandori, Tarumi-ku, Kobe, Hyogo 655-0036", x: 72, y: 476,
+           tip: "人工海灘，正對明石海峽大橋，是拍大橋全景的好位置。" },
+  maiko: { name: "舞子海上散步道", short: "海上散步道", seal: "舞子", addr: "2051 Higashimaikocho, Tarumi Ward, Kobe, Hyogo 655-0047", x: 52, y: 452,
+           tip: "藏在大橋橋身裡的展望步道，離海面約 47 公尺，中間有一段玻璃地板，腳下就是海峽。" },
+  bridge:{ name: "明石海峽大橋 塔頂體驗", short: "大橋塔頂", seal: "明石", addr: "Higashimaikocho, Tarumi-ku, Kobe, Hyogo 655-0047", x: 22, y: 492,
+           tip: "1998 年通車，中央跨距 1,991 公尺，曾是世界最長的吊橋（2022 年被土耳其的恰納卡萊 1915 大橋超越）。導覽會爬上主塔，塔高約 300 公尺。" },
+  meriken:{ name: "美利堅公園", short: "美利堅公園", seal: "港塔", addr: "2 Hatobacho, Chuo Ward, Kobe, Hyogo 650-0042", x: 166, y: 446,
+           tip: "紅色的神戶港塔 1963 年完工，高 108 公尺。旁邊的「神戶港地震紀念公園」保留了 1995 年阪神大地震時崩壞的碼頭原貌。" },
+  umie:  { name: "神戶臨海樂園 umie", short: "umie", seal: "臨海", addr: "1 Chome-7-2 Higashikawasakicho, Chuo Ward, Kobe, Hyogo 650-0044", x: 108, y: 450,
+           tip: "整個 Harborland 原本是國鐵的湊川貨物站，貨運站廢止後才改建成購物和娛樂區。逛街的地方，以前是調車場。" },
+  ekizo: { name: "EKIZO 神戶三宮", short: "EKIZO", seal: "三宮", addr: "4 Chome-2-1 Kanocho, Chuo Ward, Kobe, Hyogo 650-0001", x: 136, y: 370,
+           tip: "阪急神戶三宮站高架下的商店街，下了車不用出站就能逛。" },
+  maya:  { name: "摩耶纜車站", short: "摩耶纜車", seal: "摩耶", addr: "Mayasan, Nada Ward, Kobe, Hyogo 657-0105", x: 136, y: 334,
+           tip: "摩耶纜車（摩耶ケーブル）1925 年開業，是上摩耶山的第一段。坐到「虹の駅」後轉空中纜車。" },
+  niji:  { name: "虹の駅（Ropeway）", short: "虹の駅", seal: "虹", addr: "Harada, 灘區神戶市兵庫縣 657-0802", x: 160, y: 312,
+           tip: "地面纜車和空中纜車（ロープウェー）的轉乘站。空中纜車從這裡一路上到山頂的「星の駅」。" },
+  kikusei:{ name: "掬星台", short: "掬星台", seal: "掬星", addr: "2-2 Mayasancho, Nada Ward, Kobe, Hyogo 657-0105", x: 188, y: 290, game: "A",
+           tip: "名字的意思是「伸手就能捧起星星」。從這裡看的神戶夜景，屬於日本三大夜景（函館、神戶、長崎）。" },
+  shinkobe:{ name: "新神戶站", short: "新神戶", seal: "新神戶", addr: "神戶市中央區（山陽新幹線）", x: 92, y: 346,
+           tip: "1972 年隨山陽新幹線開業。月台夾在六甲隧道和神戶隧道之間，車站整個貼著山壁。" },
+  kyotost:{ name: "京都車站", short: "京都車站", seal: "京都驛", addr: "京都府京都市下京區", x: 104, y: 142,
+           tip: "現在的車站大樓 1997 年完工，由建築師原廣司設計，大階梯可以一路走到屋頂。對面是 1964 年的京都塔，高 131 公尺。" },
+  fushimi:{ name: "伏見稻荷大社", short: "伏見稻荷", seal: "稻荷", addr: "京都府京都市伏見區", x: 196, y: 164, game: "B",
+           tip: "全日本約三萬座稻荷神社的總本宮。千本鳥居每一座都是信眾奉納的，背面刻著奉納者的名字和日期。" },
+  kamo:  { name: "鴨川", short: "鴨川", seal: "鴨川", addr: "日本京都府京都市", x: 183, y: 94,
+           tip: "鴨川「等間隔情侶」法則：坐在河岸的人會自動保持差不多相同的距離。去的時候可以觀察看看。" },
+  rail:  { name: "京都鐵道博物館", short: "鐵道博物館", seal: "鐵道", addr: "Kankijicho, 下京區京都市京都府 600-8835", x: 44, y: 118,
+           tip: "2016 年開館。館內的梅小路扇形車庫 1914 年建成，是國家重要文化財，現在還能搭蒸汽火車「SL Steam 號」。" },
+  nishiki:{ name: "錦市場", short: "錦市場", seal: "錦", addr: "京都市中京區 錦小路通（寺町通～高倉通）", x: 122, y: 60, game: "C",
+           tip: "有「京都廚房」之稱。一條約 400 公尺長的窄巷擠了上百家店。很多店家請客人不要邊走邊吃，買了就在店門口吃完再走。" },
+  gosho: { name: "京都御所", short: "京都御所", seal: "御所", addr: "京都府京都市上京區", x: 62, y: 38,
+           tip: "1869 年遷都東京以前天皇的住所。2016 年起改成全年開放，不用預約、免費入場。" },
+  shinosaka:{ name: "新大阪站", short: "新大阪", seal: "新大阪", addr: "大阪府大阪市淀川區西中島五丁目", x: 152, y: 206,
+           tip: "1964 年東海道新幹線開業時的終點站。往東歸 JR 東海、往西的山陽新幹線歸 JR 西日本，新大阪就是兩家的分界。" },
+  osaka: { name: "大阪 自由日", short: "第 6 天", seal: "", addr: "2027/2/25（週四）", x: 92, y: 236, unknown: true,
+           tip: "Funliday 上第 6 天還沒有排景點。排好之後可以補進這張路線圖。" },
+};
+
+// Map position (lat, lng), Google Maps search name, and Wikipedia (ja) article titles used for the photo.
+const GEO = {
+  tpe:["25.0797,121.2342","台灣桃園國際機場",["台湾桃園国際空港"]],
+  ukb:["34.6328,135.2239","神戸空港",["神戸空港"]],
+  station:["34.6937,135.1952","三宮駅 ポートライナー",["ポートライナー","三宮駅 (神戸新交通)"]],
+  nankin:["34.6880,135.1876","南京町 神戸",["南京町"]],
+  daimaru:["34.6893,135.1877","大丸神戸店",["大丸神戸店"]],
+  hotel:["34.6886,135.1840","Apartment Hotel 11 Kobe Motomachi",["元町 (神戸市)","神戸元町商店街"]],
+  azur:["34.6283,135.0390","アジュール舞子",["アジュール舞子"]],
+  maiko:["34.6310,135.0333","舞子海上プロムナード",["舞子海上プロムナード","舞子公園"]],
+  bridge:["34.6302,135.0350","明石海峡大橋 ブリッジワールド",["明石海峡大橋"]],
+  meriken:["34.6823,135.1885","メリケンパーク",["メリケンパーク","神戸ポートタワー"]],
+  umie:["34.6798,135.1789","umie 神戸ハーバーランド",["神戸ハーバーランド"]],
+  ekizo:["34.6950,135.1960","EKIZO 神戸三宮",["神戸三宮駅"]],
+  maya:["34.7183,135.2052","摩耶ケーブル駅",["摩耶ケーブル線","摩耶山"]],
+  niji:["34.7230,135.2050","虹の駅 摩耶ロープウェー",["摩耶ロープウェー","摩耶山"]],
+  kikusei:["34.7279,135.2063","掬星台",["掬星台","摩耶山"]],
+  shinkobe:["34.7066,135.1951","新神戸駅",["新神戸駅"]],
+  kyotost:["34.9858,135.7588","京都駅",["京都駅"]],
+  fushimi:["34.9671,135.7727","伏見稲荷大社",["伏見稲荷大社"]],
+  kamo:["35.0060,135.7717","鴨川 三条",["鴨川 (淀川水系)"]],
+  rail:["34.9875,135.7425","京都鉄道博物館",["京都鉄道博物館"]],
+  nishiki:["35.0050,135.7648","錦市場",["錦市場"]],
+  gosho:["35.0254,135.7621","京都御所",["京都御所"]],
+  shinosaka:["34.7334,135.5001","新大阪駅",["新大阪駅"]],
+  osaka:["34.6873,135.5262","大阪城",["大阪城"]],
+};
+Object.entries(GEO).forEach(([id, [ll, q, wiki]]) => { const [lat, lng] = ll.split(",").map(Number); Object.assign(SPOTS[id], { lat, lng, q, wiki, onMap: id !== "tpe" }); });
+const S = (n, t, spot, stay, extra) => ({ k: "stop", n, t, spot, stay, ...extra });
+const M = (t, dur, mode = "transit") => ({ k: "move", t, dur, mode });
+const DAYS = [
+  { d: 1, date: "2/20", wd: "六", go: "06:05", city: "抵達神戶", items: [
+    S(1, "06:05", "tpe", "2 小時", { note: "STARLUX JX1834　08:05 → 11:45" }),
+    S(2, "11:45", "ukb", "1 小時"), M("12:45", "約 11 分", "car"),
+    S(3, "12:56", "station", "1 小時"), M("13:56", "約 6 分", "car"),
+    S(4, "14:02", "ukb", "1 小時"), M("15:02", "約 9 分", "car"),
+    S(5, "15:12", "station", "1 小時"), M("16:12", "約 13 分", "car"),
+    S(6, "16:25", "nankin", "1 小時"), M("17:25", "約 5 分", "car"),
+    S(7, "17:30", "daimaru", "1 小時"), M("18:30", "約 3 分", "car"),
+    S(8, "20:00", "hotel", "4 小時（自訂）") ] },
+  { d: 2, date: "2/21", wd: "日", go: "10:00", city: "明石海峽・摩耶山", items: [
+    S(9, "00:00", "hotel", "10 小時（自訂）"), M("10:00", "約 43 分"),
+    S(10, "10:43", "azur", "1 小時"), M("11:43", "約 13 分"),
+    S(11, "11:56", "maiko", "1 小時"), M("12:56", "約 4 分"),
+    S(12, "13:00", "bridge", "1 小時"), M("14:00", "約 41 分"),
+    S(13, "14:41", "meriken", "1 小時"), M("15:41", "約 10 分"),
+    S(14, "15:51", "umie", "1 小時"), M("16:51", "約 20 分"),
+    S(15, "17:11", "ekizo", "1 小時"), M("18:11", "約 25 分"),
+    S(16, "18:36", "maya", "1 小時"), M("19:36", "約 5 分"),
+    S(17, "19:41", "niji", "1 小時"), M("20:41", "約 5 分"),
+    S(18, "20:46", "kikusei", "1 小時"), M("21:46", "約 2 小時 59 分"),
+    S(19, "23:00", "hotel", "1 小時（自訂）") ] },
+  { d: 3, date: "2/22", wd: "一", go: "08:00", city: "神戶 → 京都", items: [
+    S(20, "00:00", "hotel", "9 小時（自訂）"), M("09:00", "約 21 分"),
+    S(21, "09:21", "shinkobe", "10 分"), M("09:31", "約 33 分"),
+    S(22, "10:04", "kyotost", "15 分"), M("10:19", "約 12 分"),
+    S(23, "10:31", "fushimi", "1 小時"), M("11:31", "約 22 分"),
+    S(24, "11:53", "kamo", "1 小時") ] },
+  { d: 4, date: "2/23", wd: "二", go: "08:00", city: "京都", items: [
+    S(25, "08:00", "rail", "4 小時"), M("12:00", "約 40 分"),
+    S(26, "12:40", "nishiki", "1 小時") ] },
+  { d: 5, date: "2/24", wd: "三", go: "08:00", city: "京都 → 大阪", items: [
+    S(27, "08:00", "gosho", "1 小時"), M("09:00", "約 25 分"),
+    S(28, "09:25", "kyotost", "15 分"), M("09:40", "約 30 分"),
+    S(29, "10:10", "shinosaka", "12 分") ] },
+  { d: 6, date: "2/25", wd: "四", go: "—", city: "大阪", items: [] },
+  { d: 7, date: "2/26", wd: "五", go: "10:45", city: "歸途", items: [
+    S(30, "10:45", "ukb", "2 小時", { note: "STARLUX JX1835　12:45 → 14:45" }),
+    S(31, "14:45", "tpe", "1 小時") ] },
+];
+const STOPS = DAYS.flatMap(d => d.items.filter(i => i.k === "stop").map(i => ({ ...i, day: d })));
+const MAP_IDS = Object.keys(SPOTS).filter(id => SPOTS[id].onMap && !SPOTS[id].unknown);
+const GAMES = {
+  A: { k: "星", name: "掬星台・接星星", spot: "kikusei", desc: "左右拖曳，接住神戶夜空落下的星星。雲會扣分，限時 30 秒。" },
+  B: { k: "鳥", name: "千本鳥居・穿越", spot: "fushimi", desc: "指針走進朱色鳥居時點一下（或按空白鍵）。共 10 座，一座比一座窄。" },
+  C: { k: "錦", name: "錦市場・採買", spot: "nishiki", desc: "記住清單，再從攤位裡挑出來。共 5 回合。" },
+};
+
+/* ================= STATE ================= */
+const KEY = "kansai-7days-v2";
+const state = { found: [], best: { A: 0, B: 0, C: 0 }, sound: false, day: 0 };
+try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+const found = new Set((state.found || []).filter(id => SPOTS[id]));
+const save = () => { state.found = [...found]; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+/* ================= SOUND (soft chimes) ================= */
+let ac = null;
+function tone(f = 660, d = .25, v = .06) {
+  if (!state.sound) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+    o.type = "sine"; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g).connect(ac.destination); o.start(t); o.stop(t + d);
+  } catch (e) {}
+}
+const chime = () => [880, 1175, 1568].forEach((f, i) => setTimeout(() => tone(f, .6, .05), i * 110));
+
+/* ================= STAMP ================= */
+function stampSVG(id, cls = "") {
+  const s = SPOTS[id], v = STOPS.find(x => x.spot === id);
+  const chars = [...(s.seal || "印")];
+  const fs = chars.length <= 1 ? 30 : chars.length === 2 ? 22 : 16;
+  const step = fs * 1.05, y0 = 47 - (chars.length - 1) * step / 2 + fs * .36;
+  return `<svg class="stamp ${cls}" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="3"/>
+    <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="1"/>
+    ${chars.map((c, i) => `<text x="50" y="${y0 + i * step}" text-anchor="middle" font-family="Noto Serif TC,serif" font-weight="900" font-size="${fs}" fill="currentColor">${esc(c)}</text>`).join("")}
+    <text x="50" y="84" text-anchor="middle" font-family="DM Mono,monospace" font-size="6.5" fill="currentColor" letter-spacing="1">2027.${v ? v.day.date.replace("/", ".") : ""}</text>
+  </svg>`;
+}
+
+/* ================= PHOTOS (Wikipedia page images, fetched in the viewer's browser) ================= */
+const PHOTO = {};      // id -> { src, file, title }
+const PKEY = "kansai-7days-photos-v1";
+try { const c = JSON.parse(localStorage.getItem(PKEY) || "null"); if (c && Date.now() - c.t < 7 * 864e5) Object.assign(PHOTO, c.p); } catch (e) {}
+async function loadPhotos() {
+  if (Object.keys(PHOTO).length >= Object.keys(GEO).length - 1) return;
+  const titles = [...new Set(Object.values(SPOTS).flatMap(s => s.wiki || []))];
+  const url = "https://ja.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail%7Cname&pithumbsize=480&titles=" + encodeURIComponent(titles.join("|"));
+  try {
+    const j = await (await fetch(url)).json(), q = j.query || {};
+    const alias = {}; (q.normalized || []).concat(q.redirects || []).forEach(r => alias[r.from] = r.to);
+    const res = t => { let k = t, n = 0; while (alias[k] && n++ < 4) k = alias[k]; return k; };
+    const byTitle = {}; Object.values(q.pages || {}).forEach(p => { if (p.thumbnail) byTitle[p.title] = { src: p.thumbnail.source, file: p.pageimage, title: p.title }; });
+    Object.entries(SPOTS).forEach(([id, s]) => { for (const t of s.wiki || []) { const hit = byTitle[res(t)]; if (hit) { PHOTO[id] = hit; break; } } });
+    try { localStorage.setItem(PKEY, JSON.stringify({ t: Date.now(), p: PHOTO })); } catch (e) {}
+  } catch (e) { console.warn("photo load failed", e); }
+  refreshPins();
+}
+const photoStyle = id => PHOTO[id] ? `background-image:url('${PHOTO[id].src.replace(/'/g, "%27")}')` : "";
+
+/* ================= MAP (Google Maps JS API with a key, otherwise Google Maps embed) ================= */
+const KEY_GM = (window.KANSAI_CONFIG && window.KANSAI_CONFIG.googleMapsApiKey) || "";
+let gmap = null, markers = {}, dayLine = null;
+function pinHTML(id) {
+  const s = SPOTS[id], f = found.has(id);
+  return `<span class="ph" style="${photoStyle(id)}">${PHOTO[id] ? "" : esc((s.seal || "？")[0])}</span><span class="ck">印</span><span class="lb">${esc(s.short)}</span>`;
+}
+function pinClass(id) { const s = SPOTS[id]; return "pin" + (s.unknown ? " unknown" : found.has(id) ? " found" : ""); }
+function refreshPins() {
+  Object.entries(markers).forEach(([id, el]) => { el.className = pinClass(id); el.innerHTML = pinHTML(id); });
+  renderStrip();
+}
+function renderStrip() {
+  const d = DAYS[state.day];
+  const ids = [...new Set(d.items.filter(i => i.k === "stop" && SPOTS[i.spot].onMap).map(i => i.spot))];
+  if (d.d === 6) ids.push("osaka");
+  $("#strip").innerHTML = ids.map(id => `<button class="${pinClass(id)}" data-pin="${id}" title="${esc(SPOTS[id].name)}">${pinHTML(id)}</button>`).join("");
+}
+$("#strip").addEventListener("click", e => { const b = e.target.closest("[data-pin]"); if (b) openSpot(b.dataset.pin); });
+function embedSrc(id) { const s = SPOTS[id]; return `https://maps.google.com/maps?q=${encodeURIComponent(s.q)}&ll=${s.lat},${s.lng}&z=15&hl=zh-TW&output=embed`; }
+function focusSpot(id) {
+  const s = SPOTS[id]; if (!s || !s.onMap) return;
+  if (gmap) { gmap.panTo({ lat: s.lat, lng: s.lng }); if (gmap.getZoom() < 14) gmap.setZoom(15); }
+  else { const f = $("#gmap iframe"); if (f) f.src = embedSrc(id); }
+}
+function focusDay() {
+  const d = DAYS[state.day];
+  const ids = d.items.filter(i => i.k === "stop" && SPOTS[i.spot].onMap).map(i => i.spot);
+  if (!ids.length) ids.push("osaka");
+  if (gmap) {
+    const b = new google.maps.LatLngBounds(); ids.forEach(id => b.extend({ lat: SPOTS[id].lat, lng: SPOTS[id].lng }));
+    if (ids.length === 1) { gmap.setCenter(b.getCenter()); gmap.setZoom(13); } else gmap.fitBounds(b, 60);
+    dayLine && dayLine.setPath(ids.map(id => ({ lat: SPOTS[id].lat, lng: SPOTS[id].lng })));
+  } else focusSpot(ids[0]);
+}
+function initEmbed() {
+  $("#gmap").innerHTML = `<iframe title="Google 地圖" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>`;
+  focusDay();
+}
+async function initGoogle() {
+  ((g) => { var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window; b = b[c] || (b[c] = {}); var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams, u = () => h || (h = new Promise(async (f, n) => { await (a = m.createElement("script")); e.set("libraries", [...r] + ""); for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]); e.set("callback", c + ".maps." + q); a.src = `https://maps.${c}apis.com/maps/api/js?` + e; d[q] = f; a.onerror = () => h = n(Error(p + " could not load.")); a.nonce = m.querySelector("script[nonce]")?.nonce || ""; m.head.append(a) })); d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n)) })({ key: KEY_GM, v: "weekly", language: "zh-TW", region: "JP" });
+  try {
+    const { Map, Polyline } = await google.maps.importLibrary("maps");
+    const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+    gmap = new Map($("#gmap"), { center: { lat: 34.85, lng: 135.45 }, zoom: 9, mapId: (window.KANSAI_CONFIG && window.KANSAI_CONFIG.mapId) || "DEMO_MAP_ID", streetViewControl: false, mapTypeControl: false, fullscreenControl: true });
+    const order = STOPS.map(s => s.spot).filter(id => SPOTS[id].onMap);
+    new Polyline({ map: gmap, path: order.map(id => ({ lat: SPOTS[id].lat, lng: SPOTS[id].lng })), strokeColor: "#1c2230", strokeOpacity: .25, strokeWeight: 2 });
+    dayLine = new Polyline({ map: gmap, path: [], strokeColor: "#c8402a", strokeOpacity: .9, strokeWeight: 3 });
+    Object.entries(SPOTS).filter(([, s]) => s.onMap).forEach(([id, s]) => {
+      const el = document.createElement("div"); el.className = pinClass(id); el.innerHTML = pinHTML(id);
+      const m = new AdvancedMarkerElement({ map: gmap, position: { lat: s.lat, lng: s.lng }, content: el, title: s.name, gmpClickable: true });
+      m.addListener("click", () => openSpot(id));
+      markers[id] = el;
+    });
+    focusDay();
+  } catch (e) { console.warn(e); gmap = null; initEmbed(); }
+}
+function renderStops() {
+  refreshPins();
+  $("#cFound").textContent = MAP_IDS.filter(id => found.has(id)).length;
+  $("#cTotal").textContent = MAP_IDS.length;
+  $("#cDays").textContent = DAYS.filter(dayDone).length;
+  renderDays();
+}
+function dayDone(d) {
+  const ids = d.items.filter(i => i.k === "stop" && SPOTS[i.spot].onMap).map(i => i.spot);
+  return ids.length > 0 && ids.every(id => found.has(id));
+}
+
+/* ================= TIMETABLE ================= */
+function renderDays() {
+  $("#days").innerHTML = DAYS.map((d, i) => `<button role="tab" aria-selected="${i === state.day}" class="${dayDone(d) ? "done" : ""}" data-day="${i}"><b>${d.d}</b><span>${d.date}</span></button>`).join("");
+  const d = DAYS[state.day];
+  const dirIds = d.items.filter(i => i.k === "stop" && SPOTS[i.spot].onMap).map(i => i.spot).filter((v, i, a) => v !== a[i - 1]);
+  const dir = dirIds.length > 1 ? `<a class="btn" style="font-size:13px;padding:4px 12px;text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/${dirIds.map(id => SPOTS[id].lat + "," + SPOTS[id].lng).join("/")}">這天路線 ↗</a>` : "";
+  $("#dayview").innerHTML = `<div class="dayhead"><h3>第 ${d.d} 日　${esc(d.city)}</h3><span>2027/${d.date}（${d.wd}）出發 ${d.go}</span>${dir}</div>` +
+    (d.items.length ? `<ol class="tt">${d.items.map(it => it.k === "stop"
+      ? `<li class="stopr ${found.has(it.spot) ? "found" : ""}"><span class="t">${it.t}</span><span class="rail"></span>
+          <button data-stop="${STOPS.findIndex(s => s.n === it.n)}"><span class="nm">${esc(SPOTS[it.spot].name)}</span><span class="st">#${it.n}・停留 ${esc(it.stay)}</span>${it.note ? `<span class="note">${esc(it.note)}</span>` : ""}</button></li>`
+      : `<li class="mv"><span class="t">${it.t}</span><span class="rail"></span><span>${it.mode === "car" ? "車程" : "大眾運輸"}　${esc(it.dur)}</span></li>`).join("")}</ol>`
+      : `<div class="empty">這天還沒有排行程。前一天上午抵達新大阪，隔天從神戶機場回台灣。</div>`);
+}
+$("#days").addEventListener("click", e => { const b = e.target.closest("[data-day]"); if (b) { state.day = +b.dataset.day; save(); renderDays(); renderStrip(); focusDay(); tone(523, .15, .03); } });
+$("#dayview").addEventListener("click", e => { const b = e.target.closest("[data-stop]"); if (b) { const i = +b.dataset.stop; openSpot(STOPS[i].spot, i); } });
+
+/* ================= MODAL ================= */
+const veil = $("#veil");
+let lastFocus = null, game = null;
+function stopGame() { if (game) { game.stop(); game = null; } }
+function show(html, wide = false) {
+  stopGame();
+  lastFocus = lastFocus || document.activeElement;
+  veil.innerHTML = `<div class="sheet${wide ? " wide" : ""}" role="dialog" aria-modal="true"><button class="x" data-close aria-label="關閉">×</button>${html}</div>`;
+  veil.hidden = false;
+  (veil.querySelector("[autofocus]") || veil.querySelector(".x")).focus();
+}
+function close() { stopGame(); veil.hidden = true; veil.innerHTML = ""; lastFocus?.focus?.(); lastFocus = null; }
+veil.addEventListener("click", e => {
+  if (e.target === veil || e.target.closest("[data-close]")) return close();
+  const go = e.target.closest("[data-go]"); if (go) { const i = +go.dataset.go; if (STOPS[i]) openSpot(STOPS[i].spot, i); return; }
+  const gm = e.target.closest("[data-game]"); if (gm) return startGame(gm.dataset.game);
+  const sp = e.target.closest("[data-spot]"); if (sp) return openSpot(sp.dataset.spot);
+  if (e.target.id === "resetBtn") return doReset(e.target);
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("#ending").hidden) closeEnding(); else if (!veil.hidden) close(); } });
+
+const visitsOf = id => STOPS.filter(s => s.spot === id);
+function openSpot(id, stopIdx) {
+  const s = SPOTS[id]; if (!s) return;
+  const onMap = s.onMap && !s.unknown, isNew = onMap && !found.has(id);
+  if (onMap) found.add(id);
+  const v = visitsOf(id), cur = stopIdx != null ? STOPS[stopIdx] : v[0], idx = cur ? STOPS.indexOf(cur) : -1;
+  if (cur) state.day = DAYS.indexOf(cur.day);
+  save(); renderStops();
+  const meta = cur ? `<span class="n">#${cur.n}</span>　第 ${cur.day.d} 日　2027/${cur.day.date}（${cur.day.wd}）${cur.t}　停留 ${esc(cur.stay)}` : "2027/2/25（四）";
+  focusSpot(id);
+  const ph = PHOTO[id];
+  const hero = ph ? `<figure class="hero"><img src="${esc(ph.src)}" alt="${esc(s.name)}"><figcaption>照片：<a href="https://ja.wikipedia.org/wiki/File:${encodeURIComponent(ph.file || "")}" target="_blank" rel="noopener">維基百科「${esc(ph.title)}」</a></figcaption></figure>` : "";
+  show(`${hero}<div class="spothead"><div>
+      <p class="meta">${meta}</p>
+      <h2>${esc(s.name)}</h2>
+      <p class="addr">${esc(s.addr)}</p>
+      ${cur?.note ? `<p class="flight">✈ ${esc(cur.note)}</p>` : ""}
+      ${s.lat ? `<p class="addr"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.q)}" target="_blank" rel="noopener">在 Google Maps 開啟 ↗</a></p>` : ""}
+    </div>${onMap ? stampSVG(id, isNew ? "new" : "") : ""}</div>
+    <div class="mame"><b>${s.unknown ? "待安排" : "豆知識"}</b><p>${esc(s.tip)}</p></div>
+    ${v.length > 1 ? `<p class="visits">這趟會經過 ${v.length} 次：${v.map(x => `第 ${x.day.d} 日 ${x.t}`).join("、")}</p>` : ""}
+    <div class="acts">
+      <button class="btn" data-go="${idx - 1}" ${idx <= 0 ? "disabled" : ""}>← 前一站</button>
+      <button class="btn" data-go="${idx + 1}" ${idx < 0 || idx >= STOPS.length - 1 ? "disabled" : ""} autofocus>下一站 →</button>
+      <span class="sp"></span>
+      ${s.game ? `<button class="btn shu" data-game="${s.game}">${esc(GAMES[s.game].name)}</button>` : ""}
+    </div>`);
+  if (isNew) { chime(); if (MAP_IDS.every(i => found.has(i))) setTimeout(() => toast("22 枚朱印集滿了。點「終章」翻到最後一頁", 5000), 600); }
+  else tone(660, .2, .04);
+}
+
+/* ================= STAMP BOOK ================= */
+let resetArm = false;
+function openBook() {
+  const n = MAP_IDS.filter(i => found.has(i)).length;
+  show(`<p class="meta">STAMP BOOK</p><h2>印章帳</h2>
+    <p class="meta">${n} / ${MAP_IDS.length} 枚</p><div class="bar"><span style="width:${n / MAP_IDS.length * 100}%"></span></div>
+    <div class="book">${MAP_IDS.map(id => `<button data-spot="${id}" aria-label="${esc(SPOTS[id].short)}">${stampSVG(id, found.has(id) ? "" : "off")}<small>${found.has(id) ? esc(SPOTS[id].short) : "未到訪"}</small></button>`).join("")}</div>
+    <div class="acts"><span class="sp"></span><button class="btn" id="resetBtn">清除集印紀錄</button></div>`, true);
+}
+function doReset(b) {
+  if (!resetArm) { resetArm = true; b.textContent = "再按一次確認"; setTimeout(() => resetArm = false, 3000); return; }
+  resetArm = false; found.clear(); state.best = { A: 0, B: 0, C: 0 }; save(); renderStops(); close(); toast("集印紀錄已清除");
+}
+
+/* ================= GAMES ================= */
+function openGames() {
+  show(`<p class="meta">MINI GAMES</p><h2>小遊戲</h2>
+    <div class="glist">${Object.entries(GAMES).map(([k, g]) => `<div class="g"><span class="k">${g.k}</span><div><h4>${esc(g.name)}</h4><p>${esc(g.desc)}</p>
+    <span class="hs">最高分 ${state.best[k] || 0}</span></div><button class="btn" data-game="${k}">開始</button></div>`).join("")}</div>`);
+}
+function gameShell(k, inner) {
+  const g = GAMES[k];
+  show(`<p class="meta">MINI GAME</p><h2>${esc(g.name)}</h2><p class="addr">${esc(g.desc)}</p>
+    <div class="ghud"><span id="gS">得分 0</span><span id="gT"></span></div>${inner}<div class="res" id="gres"></div>`);
+}
+function endGame(k, score) {
+  const prev = state.best[k] || 0, best = Math.max(prev, score); state.best[k] = best; save();
+  const r = $("#gres"); if (!r) return;
+  r.innerHTML = `<p class="meta">${score > prev ? "新紀錄　" : ""}得分 ${score}　最高 ${best}</p>
+    <div class="acts"><button class="btn shu" data-game="${k}">再玩一次</button><button class="btn" data-spot="${GAMES[k].spot}">回到景點</button></div>`;
+  score > prev ? chime() : tone(330, .4, .05);
+}
+function startGame(k) {
+  if (k === "C") return memoryGame();
+  gameShell(k, `<canvas class="gcv" id="gcv" width="300" height="400"></canvas>`);
+  (k === "A" ? starGame : toriiGame)($("#gcv"));
+}
+function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+const pal = () => ({ card: tok("--card"), ink: tok("--ink"), ink2: tok("--ink-2"), rule: tok("--rule"), shu: tok("--shu"), ai: tok("--ai") });
+
+function starGame(c) {
+  const x = c.getContext("2d"), r = rng(Date.now() % 99991 + 1);
+  let bx = 150, items = [], score = 0, left = 30, last = performance.now(), spawn = 0, run = true, keys = {};
+  const move = e => { const b = c.getBoundingClientRect(); bx = Math.max(24, Math.min(276, (e.clientX - b.left) / b.width * 300)); };
+  c.addEventListener("pointermove", move); c.addEventListener("pointerdown", move);
+  const kd = e => { keys[e.key] = e.type === "keydown"; }; addEventListener("keydown", kd); addEventListener("keyup", kd);
+  const star = (cx, cy, R, col) => { x.fillStyle = col; x.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? R * .45 : R; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.fill(); };
+  function loop(now) {
+    if (!run) return;
+    const dt = Math.min(.05, (now - last) / 1000); last = now; left -= dt; spawn -= dt;
+    if (keys.ArrowLeft || keys.a) bx -= 240 * dt; if (keys.ArrowRight || keys.d) bx += 240 * dt; bx = Math.max(24, Math.min(276, bx));
+    if (spawn <= 0) { spawn = .5 - (30 - left) * .008; const t = r(); items.push({ x: 16 + r() * 268, y: -10, v: 80 + r() * 70 + (30 - left) * 2.4, k: t > .86 ? "big" : t > .68 ? "cloud" : "star" }); }
+    items.forEach(it => it.y += it.v * dt);
+    items = items.filter(it => {
+      if (it.y > 344 && it.y < 368 && Math.abs(it.x - bx) < 30) { score = Math.max(0, score + (it.k === "big" ? 3 : it.k === "cloud" ? -2 : 1)); tone(it.k === "cloud" ? 220 : it.k === "big" ? 1568 : 1175, .2, .04); return false; }
+      return it.y < 410;
+    });
+    x.fillStyle = "#151a2e"; x.fillRect(0, 0, 300, 400);
+    x.fillStyle = "#24304a"; x.beginPath(); x.moveTo(0, 400); for (let i = 0; i <= 300; i += 10) x.lineTo(i, 372 + Math.sin(i / 30) * 8); x.lineTo(300, 400); x.fill();
+    for (let i = 0; i < 60; i++) { x.fillStyle = i % 3 ? "#f1c86a" : "#f6efe0"; x.fillRect((i * 53) % 300, 384 + (i * 7) % 14, 1.5, 1.5); }
+    items.forEach(it => {
+      if (it.k === "cloud") { x.fillStyle = "#56607e"; x.beginPath(); x.ellipse(it.x, it.y, 18, 7, 0, 0, 7); x.fill(); }
+      else star(it.x, it.y, it.k === "big" ? 11 : 7, it.k === "big" ? "#f07a5f" : "#f1c86a");
+    });
+    x.strokeStyle = "#f6efe0"; x.lineWidth = 2; x.beginPath(); x.moveTo(bx - 28, 348); x.quadraticCurveTo(bx, 372, bx + 28, 348); x.stroke();
+    $("#gS").textContent = "得分 " + score; $("#gT").textContent = Math.ceil(Math.max(0, left)) + " 秒";
+    if (left <= 0) { cleanup(); endGame("A", score); return; }
+    requestAnimationFrame(loop);
+  }
+  function cleanup() { run = false; removeEventListener("keydown", kd); removeEventListener("keyup", kd); }
+  game = { stop: cleanup }; requestAnimationFrame(loop);
+}
+
+function toriiGame(c) {
+  const x = c.getContext("2d"), r = rng(Date.now() % 99991 + 1), C = pal();
+  let gate = 0, score = 0, cur = 0, dir = 1, last = performance.now(), run = true, flash = 0, ok = false, center = .5, width = .3, speed = .7;
+  const next = () => { center = .2 + r() * .6; width = Math.max(.08, .3 - gate * .024); speed = .7 + gate * .12; }; next();
+  function hit() {
+    if (!run || flash > 0) return;
+    const off = Math.abs(cur - center); ok = off < width / 2;
+    if (ok) { score += off < width / 6 ? 150 : 100; tone(1175, .25, .05); } else tone(196, .3, .06);
+    flash = .45; gate++;
+    if (gate >= 10) setTimeout(() => { cleanup(); endGame("B", score); }, 450); else next();
+  }
+  c.addEventListener("pointerdown", hit);
+  const kd = e => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); hit(); } }; addEventListener("keydown", kd);
+  function torii(cx, base, w, h, col, a) {
+    x.globalAlpha = a; x.fillStyle = col;
+    const t = Math.max(2, w * .07);
+    x.fillRect(cx - w / 2 - t * 1.4, base - h, w + t * 2.8, t * 1.2);
+    x.fillRect(cx - w / 2, base - h + t * 2.4, w, t * .7);
+    x.fillRect(cx - w / 2 + t, base - h, t, h); x.fillRect(cx + w / 2 - 2 * t, base - h, t, h);
+    x.globalAlpha = 1;
+  }
+  function loop(now) {
+    if (!run) return;
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (flash > 0) flash -= dt; else { cur += dir * speed * dt; if (cur > 1) { cur = 1; dir = -1; } if (cur < 0) { cur = 0; dir = 1; } }
+    x.fillStyle = C.card; x.fillRect(0, 0, 300, 400);
+    for (let i = 6; i >= 0; i--) { const s = 1 + i * .5; torii(150, 200 + 110 / s, 200 / s, 230 / s, C.shu, Math.max(.15, 1 - i * .14)); }
+    x.fillStyle = C.ink; x.font = "500 14px 'DM Mono',monospace"; x.textAlign = "center";
+    x.fillText(`${Math.min(gate + 1, 10)} / 10`, 150, 30);
+    const bx0 = 30, bw = 240, by = 345;
+    x.fillStyle = C.rule; x.fillRect(bx0, by, bw, 8);
+    x.fillStyle = C.shu; x.fillRect(bx0 + (center - width / 2) * bw, by - 4, width * bw, 16);
+    x.fillStyle = C.card; x.fillRect(bx0 + (center - width / 6) * bw, by + 2, width / 3 * bw, 4);
+    x.fillStyle = flash > 0 ? (ok ? C.ai : C.ink2) : C.ink; x.fillRect(bx0 + cur * bw - 1.5, by - 12, 3, 32);
+    if (flash > 0) { x.fillStyle = ok ? C.ai : C.ink2; x.font = "900 22px 'Noto Serif TC',serif"; x.fillText(ok ? "通過" : "差一點", 150, by - 22); }
+    $("#gS").textContent = "得分 " + score;
+    requestAnimationFrame(loop);
+  }
+  function cleanup() { run = false; removeEventListener("keydown", kd); }
+  game = { stop: cleanup }; requestAnimationFrame(loop);
+}
+
+const FOODS = [["串", "田樂串"], ["玉", "玉子燒"], ["蛸", "章魚串"], ["団", "糰子"], ["漬", "京漬物"], ["豆", "豆乳甜甜圈"], ["天", "天婦羅"], ["茶", "抹茶"], ["結", "飯糰"], ["鯖", "鯖壽司"], ["芋", "烤地瓜"], ["酒", "甘酒"]];
+function memoryGame() {
+  gameShell("C", `<div class="order" id="order"></div><div class="mem" id="mem"></div>`);
+  const r = rng(Date.now() % 99991 + 1), sizes = [3, 3, 4, 4, 5];
+  let round = 0, score = 0, list = [], picked = 0, phase = "show", tm = null, alive = true;
+  game = { stop() { alive = false; clearTimeout(tm); } };
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = r() * (i + 1) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  function newRound() {
+    if (!alive) return;
+    if (round >= sizes.length) { $("#mem").innerHTML = ""; $("#order").textContent = "採買完成"; return endGame("C", score); }
+    const pool = shuffle(FOODS.slice()); list = pool.slice(0, sizes[round]); picked = 0; phase = "show";
+    $("#gT").textContent = `第 ${round + 1} / 5 回`;
+    $("#order").innerHTML = "清單　" + list.map(f => `<b>${f[1]}</b>`).join("・");
+    $("#mem").innerHTML = shuffle(pool.slice(0, 9)).map(f => `<button disabled data-f="${f[1]}"><b>${f[0]}</b><span>${f[1]}</span></button>`).join("");
+    tm = setTimeout(() => { if (!alive) return; phase = "pick"; $("#order").textContent = `清單收起來了，挑出 ${list.length} 樣`; veil.querySelectorAll("#mem button").forEach(b => b.disabled = false); }, 1500 + sizes[round] * 650);
+  }
+  $("#mem").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || phase !== "pick" || b.disabled) return;
+    b.disabled = true;
+    if (list.some(f => f[1] === b.dataset.f)) {
+      b.classList.add("ok"); score += 10; picked++; tone(1046, .2, .04);
+      if (picked === list.length) { score += 20; phase = "done"; $("#order").textContent = "全部買齊　+20"; round++; tm = setTimeout(newRound, 900); }
+    } else { b.classList.add("bad"); tone(196, .3, .06); phase = "done"; $("#order").textContent = "買錯了。清單是：" + list.map(f => f[1]).join("・"); round++; tm = setTimeout(newRound, 1700); }
+    $("#gS").textContent = "得分 " + score;
+  });
+  newRound();
+}
+
+/* ================= TOAST ================= */
+let tt; function toast(m, ms = 2600) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(tt); tt = setTimeout(() => t.hidden = true, ms); }
+
+/* ================= ENDING (vertical text, rolls right → left) ================= */
+const ROLL = [
+  ["h", "關西七日帖"], ["d", "2027.2.20 — 2.26"], ["g"],
+  ["h", "第一日　神戶"], ["p", "清晨的桃園，星宇往神戶。"], ["p", "海上的機場，南京町的熱氣，"], ["p", "舊居留地的燈。"], ["g"],
+  ["h", "第二日　明石海峽"], ["p", "舞子的沙灘，橋身裡的玻璃步道，"], ["p", "離海三百公尺的塔頂。"], ["p", "港塔、三宮，纜車上摩耶山，"], ["p", "在掬星台伸手捧起整座城市。"], ["g"],
+  ["h", "第三日　往京都"], ["p", "兩條隧道之間搭上新幹線。"], ["p", "穿過千本鳥居，在鴨川邊等距坐下。"], ["g"],
+  ["h", "第四日　京都"], ["p", "扇形車庫的蒸汽火車，"], ["p", "錦小路一整條街的味道。"], ["g"],
+  ["h", "第五日　往大阪"], ["p", "御所的白砂，京都驛到新大阪。"], ["g"],
+  ["h", "第六日　大阪"], ["p", "這一頁還空著。"], ["g"],
+  ["h", "第七日　歸途"], ["p", "神戶機場，JX1835，午後回到桃園。"], ["g"],
+  ["d", "31 停留點　3,602.4 km"], ["h", "完"],
+];
+let anim = null;
+function openEnding() {
+  close();
+  const en = $("#ending"), roll = $("#roll");
+  const col = (cls, str) => `<div class="col ${cls}">${[...str].map(ch => ch === " " ? "<span>&nbsp;</span>" : `<span>${esc(/[—\-]/.test(ch) ? "｜" : ch)}</span>`).join("")}</div>`;
+  roll.innerHTML = ROLL.map(([t, s]) => t === "g" ? `<div class="gap"></div>` : col(t === "h" ? "h" : t === "d" ? "d" : "", s)).join("");
+  en.hidden = false;
+  const vw = innerWidth, w = roll.offsetWidth, from = -vw, to = Math.max(0, w - vw + 48);
+  anim?.cancel();
+  anim = roll.animate([{ transform: `translateX(${from}px)` }, { transform: `translateX(${to}px)` }], { duration: reduced ? 1 : Math.max(24000, (to - from) * 22), fill: "forwards", easing: "linear" });
+  $("#enPause").textContent = "暫停"; $("#enClose").focus();
+  if (state.sound) chime();
+}
+function closeEnding() { anim?.cancel(); $("#ending").hidden = true; $("#bEnd").focus(); }
+$("#enPause").onclick = e => { if (!anim) return; if (anim.playState === "running") { anim.pause(); e.target.textContent = "繼續"; } else { anim.play(); e.target.textContent = "暫停"; } };
+$("#enReplay").onclick = openEnding; $("#enClose").onclick = closeEnding;
+let endArm = false;
+$("#bEnd").onclick = () => {
+  if (MAP_IDS.every(i => found.has(i)) || endArm) { endArm = false; return openEnding(); }
+  endArm = true; toast("朱印還沒集滿。再按一次可以先看"); setTimeout(() => endArm = false, 3000);
+};
+
+/* ================= HEADER / BOOT ================= */
+$("#bBook").onclick = openBook;
+$("#bGames").onclick = openGames;
+const sb = $("#bSound");
+const syncSound = () => { sb.setAttribute("aria-pressed", state.sound); sb.textContent = state.sound ? "音 開" : "音 關"; };
+sb.onclick = () => { state.sound = !state.sound; save(); syncSound(); tone(880, .3, .05); };
+$("#startBtn").onclick = () => {
+  const cv = $("#cover");
+  tone(880, .5, .04);
+  if (reduced) cv.hidden = true;
+  else cv.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: "forwards" }).onfinish = () => cv.hidden = true;
+  if (!found.size) setTimeout(() => toast("點照片圓點或行程表的站名蓋印"), 500);
+};
+syncSound(); renderStops(); KEY_GM ? initGoogle() : initEmbed(); loadPhotos(); $("#startBtn").focus();
+})();
+</script>
