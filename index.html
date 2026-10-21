@@ -106,6 +106,10 @@ button{font:inherit;color:inherit;cursor:pointer}
 .go a::after{content:" ↗";color:var(--ink-2)}
 .go a:hover{border-color:var(--ink)}
 .go a.pri{border-color:var(--ai);color:var(--ai)}
+.live{flex-basis:100%;font-size:12px;line-height:1.55;color:var(--ink);background:var(--paper);border-left:2px solid var(--ai);padding:4px 8px}
+.live i{font-style:normal;font-family:var(--f-mono);font-size:10px;letter-spacing:.1em;color:var(--ai);display:block}
+.live b{font-weight:700}
+.live.off{border-left-color:var(--shu);color:var(--ink-2)}
 .nextleg{margin-top:14px;padding:12px 14px;border:1px solid var(--rule);display:grid;gap:8px}
 .nextleg b{font-size:14px}
 .nextleg small{font-size:12px;color:var(--ink-2)}
@@ -539,14 +543,72 @@ function legHTML(day, mv) {
   const first = mv.mode === "car" ? "driving" : "transit";
   const order = MODES.slice().sort((x, y) => (y[0] === first) - (x[0] === first));
   return `<span class="leg"><span class="to">→ ${esc(SPOTS[next.spot].short)}</span>${plan}
-    <span class="go">${order.map(([m, l]) => `<a class="${m === first ? "pri" : ""}" href="${routeURL(prev.spot, next.spot, m)}" target="_blank" rel="noopener">${l}</a>`).join("")}</span></span>`;
+    <span class="go">${order.map(([m, l]) => `<a class="${m === first ? "pri" : ""}" href="${routeURL(prev.spot, next.spot, m)}" target="_blank" rel="noopener">${l}</a>`).join("")}</span>
+    ${KEY_GM ? `<span class="live" data-from="${prev.spot}" data-to="${next.spot}" data-first="${first}">即時查詢中…</span>` : ""}</span>`;
 }
 function nextLeg(stopIdx) {
   const cur = STOPS[stopIdx], nx = STOPS[stopIdx + 1];
   if (!cur || !nx || cur.spot === nx.spot || cur.spot === "tpe" || nx.spot === "tpe" || !SPOTS[cur.spot].q || !SPOTS[nx.spot].q) return "";
   return `<div class="nextleg"><b>往下一站：${esc(SPOTS[nx.spot].name)}</b>
     <span class="go">${MODES.map(([m, l], k) => `<a class="${k === 0 ? "pri" : ""}" href="${routeURL(cur.spot, nx.spot, m)}" target="_blank" rel="noopener">${l}</a>`).join("")}</span>
+    ${KEY_GM ? `<span class="live" data-from="${cur.spot}" data-to="${nx.spot}" data-first="transit">即時查詢中…</span>` : ""}
     <small>點了會開 Google Maps，顯示現在出發的即時時間、班次與轉乘。</small></div>`;
+}
+
+/* ================= LIVE TIMES via Routes API (needs googleMapsApiKey + Routes API enabled) ================= */
+const LIVE = new Map();   // "from>to>mode" -> {t, v}
+const VEH = { SUBWAY: "地鐵", HEAVY_RAIL: "JR／鐵路", COMMUTER_TRAIN: "電車", HIGH_SPEED_TRAIN: "新幹線", LONG_DISTANCE_TRAIN: "鐵路", RAIL: "鐵路", METRO_RAIL: "地鐵", MONORAIL: "單軌", TRAM: "路面電車", LIGHT_RAIL: "輕軌", BUS: "公車", INTERCITY_BUS: "巴士", TROLLEYBUS: "公車", FUNICULAR: "纜車", GONDOLA_LIFT: "空中纜車", CABLE_CAR: "纜車", FERRY: "渡輪" };
+const fmtMin = s => { const m = Math.round(parseInt(s, 10) / 60); return m >= 60 ? `${Math.floor(m / 60)} 小時 ${m % 60} 分` : `${m} 分`; };
+async function liveRoute(from, to, mode) {
+  const k = `${from}>${to}>${mode}`, c = LIVE.get(k);
+  if (c && Date.now() - c.t < 5 * 60e3) return c.v;
+  const a = SPOTS[from], b = SPOTS[to];
+  const body = {
+    origin: { location: { latLng: { latitude: a.lat, longitude: a.lng } } },
+    destination: { location: { latLng: { latitude: b.lat, longitude: b.lng } } },
+    travelMode: mode === "transit" ? "TRANSIT" : mode === "driving" ? "DRIVE" : "WALK",
+    languageCode: "zh-TW", regionCode: "JP",
+  };
+  if (mode === "driving") body.routingPreference = "TRAFFIC_AWARE";
+  const mask = mode === "transit"
+    ? "routes.duration,routes.legs.steps.travelMode,routes.legs.steps.transitDetails.transitLine.nameShort,routes.legs.steps.transitDetails.transitLine.name,routes.legs.steps.transitDetails.transitLine.vehicle.type,routes.legs.steps.transitDetails.stopDetails.departureTime"
+    : "routes.duration,routes.distanceMeters";
+  let v = null;
+  try {
+    const r = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+      method: "POST", headers: { "Content-Type": "application/json", "X-Goog-Api-Key": KEY_GM, "X-Goog-FieldMask": mask }, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error?.message || r.status);
+    const rt = j.routes?.[0];
+    if (rt) {
+      v = { dur: fmtMin(rt.duration) };
+      if (mode === "transit") {
+        const steps = (rt.legs?.[0]?.steps || []).filter(st => st.travelMode === "TRANSIT" && st.transitDetails);
+        v.lines = steps.map(st => { const L = st.transitDetails.transitLine || {}; return L.nameShort || L.name || VEH[L.vehicle?.type] || "大眾運輸"; }).filter((x, i, arr) => x !== arr[i - 1]);
+        const dep = steps[0]?.transitDetails?.stopDetails?.departureTime;
+        if (dep) v.dep = new Date(dep).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Tokyo" });
+        if (!steps.length) v.lines = ["步行即可"];
+      } else if (rt.distanceMeters) v.km = (rt.distanceMeters / 1000).toFixed(1);
+    }
+  } catch (e) { console.warn("Routes API", e); v = { err: String(e.message || e) }; }
+  LIVE.set(k, { t: Date.now(), v });
+  return v;
+}
+async function fillLive(root) {
+  if (!KEY_GM) return;
+  const els = [...root.querySelectorAll(".live:not([data-done])")];
+  for (const el of els) {
+    el.dataset.done = "1";
+    const { from, to } = el.dataset;
+    const [tr, dr] = await Promise.all([liveRoute(from, to, "transit"), liveRoute(from, to, "driving")]);
+    if (!el.isConnected) continue;
+    const err = (tr && tr.err) || (dr && dr.err);
+    if (err && !(tr && tr.dur) && !(dr && dr.dur)) { el.className = "live off"; el.textContent = "即時資料讀取失敗：" + (/API key|not enabled|PERMISSION/i.test(err) ? "金鑰未開啟 Routes API 或網址限制不符" : err); continue; }
+    const parts = [];
+    if (tr && tr.dur) parts.push(`<b>大眾運輸 ${tr.dur}</b>${tr.lines && tr.lines.length ? `（${tr.lines.map(esc).join(" → ")}）` : ""}${tr.dep ? `　下一班 ${tr.dep}` : ""}`);
+    if (dr && dr.dur) parts.push(`<b>開車 ${dr.dur}</b>${dr.km ? `・${dr.km} km` : ""}`);
+    el.innerHTML = `<i>現在出發</i>${parts.join("<br>") || "查不到路線"}`;
+  }
 }
 
 /* ================= TIMETABLE ================= */
@@ -561,6 +623,7 @@ function renderDays() {
           <button data-stop="${STOPS.findIndex(s => s.n === it.n)}"><span class="nm">${esc(SPOTS[it.spot].name)}</span><span class="st">#${it.n}・停留 ${esc(it.stay)}</span>${it.note ? `<span class="note">${esc(it.note)}</span>` : ""}</button></li>`
       : `<li class="mv"><span class="t">${it.t}</span><span class="rail"></span>${legHTML(d, it)}</li>`).join("")}</ol>`
       : `<div class="empty">這天還沒有排行程。前一天上午抵達新大阪，隔天從神戶機場回台灣。</div>`);
+  fillLive($("#dayview"));
 }
 $("#days").addEventListener("click", e => { const b = e.target.closest("[data-day]"); if (b) { state.day = +b.dataset.day; save(); renderDays(); renderStrip(); focusDay(); tone(523, .15, .03); } });
 $("#dayview").addEventListener("click", e => { const b = e.target.closest("[data-stop]"); if (b) { const i = +b.dataset.stop; openSpot(STOPS[i].spot, i); } });
@@ -614,6 +677,7 @@ function openSpot(id, stopIdx) {
       <span class="sp"></span>
       ${s.game ? `<button class="btn shu" data-game="${s.game}">${esc(GAMES[s.game].name)}</button>` : ""}
     </div>`);
+  fillLive(veil);
   if (isNew) { chime(); if (MAP_IDS.every(i => found.has(i))) setTimeout(() => toast("22 枚朱印集滿了。點「終章」翻到最後一頁", 5000), 600); }
   else tone(660, .2, .04);
 }
