@@ -98,7 +98,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tt .mv{font-size:12px;color:var(--ink-2)}
 .tt .mv .t{padding-top:1px;font-size:11px}
 .tt .mv > span:last-child{padding:1px 0 3px}
-.tt .mv > .leg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:3px 0 5px;min-width:0}
+.tt .mv > .leg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:4px 8px;margin:2px 0 4px -8px;min-width:0;color:var(--ink-2);text-decoration:none;border-radius:4px}
+.tt .mv > .leg.link{cursor:pointer}
+.tt .mv > .leg.link .lt{color:var(--ai);text-decoration:underline dotted;text-underline-offset:3px}
+.tt .mv > .leg .gm{font-size:11px;color:var(--ink-2)}
+.tt .mv > .leg.link:hover{background:var(--card)}
+.tt .mv > .leg.link:hover .lt{text-decoration-style:solid}
 .leg .to{color:var(--ink);font-size:12px}
 .leg .plan{font-family:var(--f-mono);font-size:11px}
 .go{display:inline-flex;flex-wrap:wrap;gap:4px}
@@ -538,13 +543,12 @@ function routeURL(from, to, mode) {
 }
 function legHTML(day, mv) {
   const i = day.items.indexOf(mv), prev = day.items[i - 1], next = day.items[i + 1];
-  const plan = `<span class="plan">預估 ${esc(mv.dur)}</span>`;
-  if (!prev || !next || prev.spot === next.spot || !SPOTS[prev.spot].q || !SPOTS[next.spot].q) return `<span class="leg">${plan}</span>`;
-  const first = mv.mode === "car" ? "driving" : "transit";
-  const order = MODES.slice().sort((x, y) => (y[0] === first) - (x[0] === first));
-  return `<span class="leg"><span class="to">→ ${esc(SPOTS[next.spot].short)}</span>${plan}
-    <span class="go">${order.map(([m, l]) => `<a class="${m === first ? "pri" : ""}" href="${routeURL(prev.spot, next.spot, m)}" target="_blank" rel="noopener">${l}</a>`).join("")}</span>
-    ${KEY_GM ? `<span class="live" data-from="${prev.spot}" data-to="${next.spot}" data-first="${first}">即時查詢中…</span>` : ""}</span>`;
+  const mode = mv.mode === "car" ? "driving" : "transit", label = mv.mode === "car" ? "車程" : "大眾運輸";
+  const ok = prev && next && prev.spot !== next.spot && SPOTS[prev.spot].q && SPOTS[next.spot].q;
+  if (!ok) return `<span class="leg"><span class="lt">${label}　${esc(mv.dur)}</span></span>`;
+  return `<a class="leg link" href="${routeURL(prev.spot, next.spot, mode)}" target="_blank" rel="noopener" title="在 Google Maps 查 ${esc(SPOTS[prev.spot].short)} → ${esc(SPOTS[next.spot].short)}">
+    <span class="lt">${label}　${esc(mv.dur)}</span><span class="gm">Google Maps 路線 ↗</span>
+    ${KEY_GM ? `<span class="live" data-from="${prev.spot}" data-to="${next.spot}">即時查詢中…</span>` : ""}</a>`;
 }
 function nextLeg(stopIdx) {
   const cur = STOPS[stopIdx], nx = STOPS[stopIdx + 1];
