@@ -98,6 +98,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tt .mv{font-size:12px;color:var(--ink-2)}
 .tt .mv .t{padding-top:1px;font-size:11px}
 .tt .mv > span:last-child{padding:1px 0 3px}
+.tt .mv > .leg{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:3px 0 5px;min-width:0}
+.leg .to{color:var(--ink);font-size:12px}
+.leg .plan{font-family:var(--f-mono);font-size:11px}
+.go{display:inline-flex;flex-wrap:wrap;gap:4px}
+.go a{font-size:12px;line-height:1.2;padding:3px 9px;border:1px solid var(--rule);border-radius:999px;color:var(--ink);text-decoration:none;background:var(--card);white-space:nowrap}
+.go a::after{content:" ↗";color:var(--ink-2)}
+.go a:hover{border-color:var(--ink)}
+.go a.pri{border-color:var(--ai);color:var(--ai)}
+.nextleg{margin-top:14px;padding:12px 14px;border:1px solid var(--rule);display:grid;gap:8px}
+.nextleg b{font-size:14px}
+.nextleg small{font-size:12px;color:var(--ink-2)}
 .empty{border:1px dashed var(--ink-2);padding:18px;color:var(--ink-2);font-size:14px}
 
 /* ---------- modal ---------- */
@@ -515,6 +526,29 @@ function dayDone(d) {
   return ids.length > 0 && ids.every(id => found.has(id));
 }
 
+/* ================= LIVE ROUTES (opens Google Maps with real-time results) ================= */
+const MODES = [["transit", "大眾運輸"], ["driving", "開車"], ["walking", "步行"]];
+function routeURL(from, to, mode) {
+  const a = SPOTS[from], b = SPOTS[to];
+  return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(a.q)}&destination=${encodeURIComponent(b.q)}&travelmode=${mode}`;
+}
+function legHTML(day, mv) {
+  const i = day.items.indexOf(mv), prev = day.items[i - 1], next = day.items[i + 1];
+  const plan = `<span class="plan">預估 ${esc(mv.dur)}</span>`;
+  if (!prev || !next || prev.spot === next.spot || !SPOTS[prev.spot].q || !SPOTS[next.spot].q) return `<span class="leg">${plan}</span>`;
+  const first = mv.mode === "car" ? "driving" : "transit";
+  const order = MODES.slice().sort((x, y) => (y[0] === first) - (x[0] === first));
+  return `<span class="leg"><span class="to">→ ${esc(SPOTS[next.spot].short)}</span>${plan}
+    <span class="go">${order.map(([m, l]) => `<a class="${m === first ? "pri" : ""}" href="${routeURL(prev.spot, next.spot, m)}" target="_blank" rel="noopener">${l}</a>`).join("")}</span></span>`;
+}
+function nextLeg(stopIdx) {
+  const cur = STOPS[stopIdx], nx = STOPS[stopIdx + 1];
+  if (!cur || !nx || cur.spot === nx.spot || cur.spot === "tpe" || nx.spot === "tpe" || !SPOTS[cur.spot].q || !SPOTS[nx.spot].q) return "";
+  return `<div class="nextleg"><b>往下一站：${esc(SPOTS[nx.spot].name)}</b>
+    <span class="go">${MODES.map(([m, l], k) => `<a class="${k === 0 ? "pri" : ""}" href="${routeURL(cur.spot, nx.spot, m)}" target="_blank" rel="noopener">${l}</a>`).join("")}</span>
+    <small>點了會開 Google Maps，顯示現在出發的即時時間、班次與轉乘。</small></div>`;
+}
+
 /* ================= TIMETABLE ================= */
 function renderDays() {
   $("#days").innerHTML = DAYS.map((d, i) => `<button role="tab" aria-selected="${i === state.day}" class="${dayDone(d) ? "done" : ""}" data-day="${i}"><b>${d.d}</b><span>${d.date}</span></button>`).join("");
@@ -525,7 +559,7 @@ function renderDays() {
     (d.items.length ? `<ol class="tt">${d.items.map(it => it.k === "stop"
       ? `<li class="stopr ${found.has(it.spot) ? "found" : ""}"><span class="t">${it.t}</span><span class="rail"></span>
           <button data-stop="${STOPS.findIndex(s => s.n === it.n)}"><span class="nm">${esc(SPOTS[it.spot].name)}</span><span class="st">#${it.n}・停留 ${esc(it.stay)}</span>${it.note ? `<span class="note">${esc(it.note)}</span>` : ""}</button></li>`
-      : `<li class="mv"><span class="t">${it.t}</span><span class="rail"></span><span>${it.mode === "car" ? "車程" : "大眾運輸"}　${esc(it.dur)}</span></li>`).join("")}</ol>`
+      : `<li class="mv"><span class="t">${it.t}</span><span class="rail"></span>${legHTML(d, it)}</li>`).join("")}</ol>`
       : `<div class="empty">這天還沒有排行程。前一天上午抵達新大阪，隔天從神戶機場回台灣。</div>`);
 }
 $("#days").addEventListener("click", e => { const b = e.target.closest("[data-day]"); if (b) { state.day = +b.dataset.day; save(); renderDays(); renderStrip(); focusDay(); tone(523, .15, .03); } });
@@ -572,6 +606,7 @@ function openSpot(id, stopIdx) {
       ${s.lat ? `<p class="addr"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.q)}" target="_blank" rel="noopener">在 Google Maps 開啟 ↗</a></p>` : ""}
     </div>${onMap ? stampSVG(id, isNew ? "new" : "") : ""}</div>
     <div class="mame"><b>${s.unknown ? "待安排" : "豆知識"}</b><p>${esc(s.tip)}</p></div>
+    ${idx >= 0 ? nextLeg(idx) : ""}
     ${v.length > 1 ? `<p class="visits">這趟會經過 ${v.length} 次：${v.map(x => `第 ${x.day.d} 日 ${x.t}`).join("、")}</p>` : ""}
     <div class="acts">
       <button class="btn" data-go="${idx - 1}" ${idx <= 0 ? "disabled" : ""}>← 前一站</button>
