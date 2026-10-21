@@ -1,26 +1,28 @@
 # 關西七日帖
 
-2027/2/20–2/26 神戶・京都・大阪行程的集印小遊戲。純靜態網頁，放 GitHub Pages 即可。
+2027/2/20–2/26 神戶・京都・大阪，六人七日的行程網站。純靜態網頁，放在 GitHub Pages。
 
-## 上線
+網址：https://yiyunlai.github.io/kansai-7days/
 
-1. GitHub 建一個 Public repository，例如 `kansai-7days`。
-2. 把 `index.html`、`config.js`、`.nojekyll` 上傳到根目錄。
-3. Settings → Pages → Deploy from a branch → `main` / `/(root)` → Save。
-4. 網址會是 `https://yiyunlai.github.io/kansai-7days/`。
+## 頁面
 
-## 地圖兩種模式
+- 首頁：插畫、七日路線、成員
+- 行程 → 第 N 日（時刻表、每段交通連到 Google Maps）→ 景點（照片、打卡蓋印、筆記、往下一站）
+- 地圖、成員、成員個人頁、我的紀錄、小遊戲
 
-- **免金鑰（預設）**：Google 地圖嵌入，點哪個景點就顯示哪個；地圖下方是當天景點的照片圓點。
-- **有金鑰**：在 `config.js` 填 `googleMapsApiKey`，照片圓點會直接釘在 Google 地圖上，並畫出每天路線。
-  - 到 Google Cloud Console 建專案 → 啟用「Maps JavaScript API」→ 建立 API 金鑰。
-  - 金鑰限制「HTTP 參照網址」為 `https://yiyunlai.github.io/*`，避免被盜用。
-  - 需要綁定帳單，但個人網站的流量通常在免費額度內。
+## 成員與紀錄
 
-## 照片
+- 每個人在自己的手機選角色。打卡、筆記、遊戲分數存在那支手機的瀏覽器裡（localStorage）。
+- 換手機或清除瀏覽器資料，紀錄不會跟過去。
 
-景點照片在瀏覽器端從日文維基百科抓條目主圖（Wikimedia Commons），卡片右下角有出處連結。要換成自己的照片，改 `index.html` 裡 `GEO` 的維基條目名稱，或之後再加自訂圖片欄位。
+## 要改什麼
 
-## 修改行程
+| 想改 | 檔案 |
+| --- | --- |
+| 成員名字、Google Maps 金鑰 | `config.js` |
+| 行程、景點文字、座標 | `data.js` |
+| 顏色、字體、版面 | `styles.css` |
+| 插畫（主視覺、角色、遊戲圖） | `art.js` |
+| 頁面內容、打卡、遊戲 | `app.js` |
 
-`index.html` 裡的 `DAYS`（每日行程）、`SPOTS`（景點文字）、`GEO`（座標、Google 搜尋名稱、維基條目）。
+照片在瀏覽器端從日文維基百科抓條目主圖（Wikimedia Commons），景點頁標註出處。
